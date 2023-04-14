@@ -90,8 +90,7 @@ def get_rfm_score_self_define_Bob_stone(rfm_dict):
     rfm_dict['rank_self_define'] = pd.Series(rfm_dict['RFM_score_self_define']).rank(method='min', ascending=False).astype(int)
 
     rfm_score_dict_self_define = rfm_dict
-    return rfm_score_dict_self_define    
-
+    return rfm_score_dict_self_define   
 
 def main():
     df = pd.read_excel("大數據行銷實作練習_信用卡資料.xlsx", sheet_name=2)
@@ -101,6 +100,8 @@ def main():
     RFM_score_add_self_define = get_rfm_score_self_define_Bob_stone(RFM_score_add_5split)
 
     rfm_df = pd.DataFrame(RFM_score_add_self_define)
+    # print(rfm_df)
+    print(rfm_df.shape)
     rfm_df.to_excel("rfm_df.xlsx", index=False)
 
 
