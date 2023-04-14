@@ -1,6 +1,7 @@
 import pandas as pd
 
 def get_dataframes_check_report(df):
+    print("type", type(df))
     print("shape", df.shape)
     df_columns = df.columns.tolist()
     print("df_columns", df_columns)
@@ -31,34 +32,51 @@ def CAI(writer, df):
 
     return df_person_CAI
 
-def get_active_customer(writer, df):
+def get_active_customer(writer, df, df_person_detail, df_spending):
     df_active = df[df['CAI'] < df['CAI'].quantile(0.2)]
-    df_active = df_active.reset_index(drop=True)
+    df_active = df_active.merge(df_person_detail, left_on='客戶ID', right_on='客戶ID', how='left')
+    df_active = df_active.merge(df_spending, left_on='客戶ID', right_on='客戶ID', how='left')
 
     df_active.to_excel(writer,  sheet_name='active_customer')
 
-def get_inactive_customer(writer, df):
+def get_inactive_customer(writer, df, df_person_detail, df_spending):
     df_inactive = df[df['CAI'] > df['CAI'].quantile(0.8)]
-    df_inactive = df_inactive.reset_index(drop=True)
+    df_inactive = df_inactive.merge(df_person_detail, left_on='客戶ID', right_on='客戶ID', how='left')
+    df_inactive = df_inactive.merge(df_spending, left_on='客戶ID', right_on='客戶ID', how='left')
 
     df_inactive.to_excel(writer, sheet_name='inactive_customer')
 
-def get_normal_customer(writer, df):
+def get_normal_customer(writer, df, df_person_detail, df_spending):
     df_nomal = df[df['CAI'] > df['CAI'].quantile(0.2)]
     df_nomal = df_nomal[df_nomal['CAI'] < df_nomal['CAI'].quantile(0.8)]
-    df_nomal = df_nomal.reset_index(drop=True)
+    df_nomal = df_nomal.merge(df_person_detail, left_on='客戶ID', right_on='客戶ID', how='left')
+    df_nomal = df_nomal.merge(df_spending, left_on='客戶ID', right_on='客戶ID', how='left')
 
     df_nomal.to_excel(writer, sheet_name='normal_customer')
 
+def get_personal_monthly_spending(df):
+    #如何將 df_transaction 轉換成 每一個的客戶ID，全部的刷卡金額
+    df = df.loc[:, ['客戶ID', '刷卡日期', '刷卡金額']]
+    df = df.groupby(['客戶ID']).agg({'刷卡金額': 'sum'})
+    df = df.reset_index()
+    df = df.sort_values(by=['客戶ID'], ascending=True)
+
+    get_dataframes_check_report(df)
+
+    return df
+
 def main():
-    df = pd.read_excel("input/大數據行銷實作練習_信用卡資料.xlsx", sheet_name=2)
+    df_transaction = pd.read_excel("raw/大數據行銷實作練習_信用卡資料.xlsx", sheet_name=2)
+    df_person_detail = pd.read_excel("raw/大數據行銷實作練習_信用卡資料.xlsx", sheet_name=0)
+    df_card_detail = pd.read_excel("raw/大數據行銷實作練習_信用卡資料.xlsx", sheet_name=1)
+    df_spending = get_personal_monthly_spending(df_transaction)
 
     with pd.ExcelWriter('output/CAI_作業2_蔡佳芸_M11108040.xlsx') as writer:
-        df_person_CAI = CAI(writer, df)
+        df_person_CAI = CAI(writer, df_transaction)
 
-        get_active_customer(writer, df_person_CAI)
-        get_inactive_customer(writer, df_person_CAI)
-        get_normal_customer(writer, df_person_CAI)
+        get_active_customer(writer, df_person_CAI, df_person_detail, df_spending)
+        get_inactive_customer(writer, df_person_CAI, df_person_detail, df_spending)
+        get_normal_customer(writer, df_person_CAI, df_person_detail, df_spending)
     
 if __name__ == '__main__':
     main()
