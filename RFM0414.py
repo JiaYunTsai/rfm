@@ -93,16 +93,18 @@ def get_rfm_score_self_define_Bob_stone(rfm_dict):
     return rfm_score_dict_self_define   
 
 def main():
-    df = pd.read_excel("大數據行銷實作練習_信用卡資料.xlsx", sheet_name=2)
+    df = pd.read_excel("raw/大數據行銷實作練習_信用卡資料.xlsx", sheet_name=2)
     RFM_base_dict = get_RFM_base_dict(df)
     RFM_score_add_Bob_stone = get_rfm_score_Bob_stone(RFM_base_dict)
     RFM_score_add_5split = get_rfm_score_5split(RFM_score_add_Bob_stone)
     RFM_score_add_self_define = get_rfm_score_self_define_Bob_stone(RFM_score_add_5split)
 
     rfm_df = pd.DataFrame(RFM_score_add_self_define)
-    # print(rfm_df)
-    print(rfm_df.shape)
-    rfm_df.to_excel("rfm_df.xlsx", index=False)
+    print(rfm_df.head())
+    print(rfm_df.columns.to_list())
+    # # print(rfm_df)
+    # print(rfm_df.shape)
+    # rfm_df.to_excel("rfm_df.xlsx", index=False)
 
 
 if __name__ == '__main__':

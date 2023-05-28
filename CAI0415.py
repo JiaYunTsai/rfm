@@ -8,7 +8,7 @@ def get_dataframes_check_report(df):
     print(df.head(10))
     print(df.tail(10))
 
-def CAI(writer, df):
+def CAI(df):
     df = df.loc[:, ['客戶ID', '刷卡日期']]
     df = df.drop_duplicates(subset=['客戶ID', '刷卡日期'], keep='first')
     df = df.reset_index(drop=True)
@@ -21,15 +21,13 @@ def CAI(writer, df):
     df['刷卡間隔*權重'] = df['刷卡間隔'] * df['權重']
 
     df_person_CAI = df.groupby(['客戶ID']).agg({'刷卡間隔': 'mean', '權重': 'sum', '刷卡間隔*權重': 'sum'})
+    df_person_CAI = df_person_CAI.reset_index()
     df_person_CAI = df_person_CAI.rename(columns={'刷卡間隔': 'MLE', "權重": '加權加總', '刷卡間隔*權重': '加權值加總'})
 
     df_person_CAI['WMLE'] = df_person_CAI['加權值加總'] / df_person_CAI['加權加總']
     df_person_CAI['CAI'] = ((df_person_CAI['MLE']-df_person_CAI['WMLE'])/ df_person_CAI['MLE'])*100
 
     df_person_CAI = df_person_CAI.sort_values(by=['CAI'], ascending=True)
-
-    df_person_CAI.to_excel(writer, sheet_name='CAI')
-
     return df_person_CAI
 
 def get_active_customer(writer, df, df_person_detail, df_spending):
@@ -70,9 +68,10 @@ def main():
     df_person_detail = pd.read_excel("raw/大數據行銷實作練習_信用卡資料.xlsx", sheet_name=0)
     df_card_detail = pd.read_excel("raw/大數據行銷實作練習_信用卡資料.xlsx", sheet_name=1)
     df_spending = get_personal_monthly_spending(df_transaction)
+    df_person_CAI = CAI(df_transaction)
 
     with pd.ExcelWriter('output/CAI_作業2_蔡佳芸_M11108040.xlsx') as writer:
-        df_person_CAI = CAI(writer, df_transaction)
+        df_person_CAI.to_excel(writer, sheet_name='CAI')
 
         get_active_customer(writer, df_person_CAI, df_person_detail, df_spending)
         get_inactive_customer(writer, df_person_CAI, df_person_detail, df_spending)
